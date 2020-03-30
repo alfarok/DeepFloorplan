@@ -58,7 +58,7 @@ def _bytes_feature(value):
 	return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value]))
 
 def write_record(paths, name='dataset.tfrecords'):
-	writer = tf.python_io.TFRecordWriter(name)
+	writer = tf.io.TFRecordWriter(name)
 	
 	for i in range(len(paths)):
 		# Load the image
@@ -80,28 +80,28 @@ def write_record(paths, name='dataset.tfrecords'):
 	writer.close()
 
 def read_record(data_path, batch_size=1, size=512):
-	feature = {'image': tf.FixedLenFeature(shape=(), dtype=tf.string),
-				'wall': tf.FixedLenFeature(shape=(), dtype=tf.string),
-				'close': tf.FixedLenFeature(shape=(), dtype=tf.string),
-				'room': tf.FixedLenFeature(shape=(), dtype=tf.string),
-				'close_wall': tf.FixedLenFeature(shape=(), dtype=tf.string)}
+	feature = {'image': tf.io.FixedLenFeature(shape=(), dtype=tf.string),
+				'wall': tf.io.FixedLenFeature(shape=(), dtype=tf.string),
+				'close': tf.io.FixedLenFeature(shape=(), dtype=tf.string),
+				'room': tf.io.FixedLenFeature(shape=(), dtype=tf.string),
+				'close_wall': tf.io.FixedLenFeature(shape=(), dtype=tf.string)}
 
 	# Create a list of filenames and pass it to a queue
-	filename_queue = tf.train.string_input_producer([data_path], num_epochs=None, shuffle=False, capacity=batch_size*128)
+	filename_queue = tf.compat.v1.train.string_input_producer([data_path], num_epochs=None, shuffle=False, capacity=batch_size*128)
 	
 	# Define a reader and read the next record
-	reader = tf.TFRecordReader()
+	reader = tf.compat.v1.TFRecordReader()
 	_, serialized_example = reader.read(filename_queue)
 
 	# Decode the record read by the reader
-	features = tf.parse_single_example(serialized_example, features=feature)
+	features = tf.io.parse_single_example(serialized=serialized_example, features=feature)
 
 	# Convert the image data from string back to the numbers
-	image = tf.decode_raw(features['image'], tf.uint8)
-	wall = tf.decode_raw(features['wall'], tf.uint8)
-	close = tf.decode_raw(features['close'], tf.uint8)
-	room = tf.decode_raw(features['room'], tf.uint8)
-	close_wall = tf.decode_raw(features['close_wall'], tf.uint8)
+	image = tf.io.decode_raw(features['image'], tf.uint8)
+	wall = tf.io.decode_raw(features['wall'], tf.uint8)
+	close = tf.io.decode_raw(features['close'], tf.uint8)
+	room = tf.io.decode_raw(features['room'], tf.uint8)
+	close_wall = tf.io.decode_raw(features['close_wall'], tf.uint8)
 
 	# Cast data
 	image = tf.cast(image, dtype=tf.float32)
@@ -129,7 +129,7 @@ def read_record(data_path, batch_size=1, size=512):
 	room_one_hot = tf.one_hot(room, 9, axis=-1)
 
 	# Creates batches by randomly shuffling tensors
-	images, walls, closes, rooms, close_walls = tf.train.shuffle_batch([image, wall, close, room_one_hot, close_wall], 
+	images, walls, closes, rooms, close_walls = tf.compat.v1.train.shuffle_batch([image, wall, close, room_one_hot, close_wall], 
 						batch_size=batch_size, capacity=batch_size*128, num_threads=1, min_after_dequeue=batch_size*32)	
 
 	# images, walls = tf.train.shuffle_batch([image, wall], 
@@ -180,7 +180,7 @@ def load_seg_raw_images(path):
 	return image, room_ind
 
 def write_seg_record(paths, name='dataset.tfrecords'):
-	writer = tf.python_io.TFRecordWriter(name)
+	writer = tf.io.TFRecordWriter(name)
 	
 	for i in range(len(paths)):
 		# Load the image
@@ -199,22 +199,22 @@ def write_seg_record(paths, name='dataset.tfrecords'):
 	writer.close()
 
 def read_seg_record(data_path, batch_size=1, size=512):
-	feature = {'image': tf.FixedLenFeature(shape=(), dtype=tf.string),
-				'label': tf.FixedLenFeature(shape=(), dtype=tf.string)}
+	feature = {'image': tf.io.FixedLenFeature(shape=(), dtype=tf.string),
+				'label': tf.io.FixedLenFeature(shape=(), dtype=tf.string)}
 
 	# Create a list of filenames and pass it to a queue
-	filename_queue = tf.train.string_input_producer([data_path], num_epochs=None, shuffle=False, capacity=batch_size*128)
+	filename_queue = tf.compat.v1.train.string_input_producer([data_path], num_epochs=None, shuffle=False, capacity=batch_size*128)
 	
 	# Define a reader and read the next record
-	reader = tf.TFRecordReader()
+	reader = tf.compat.v1.TFRecordReader()
 	_, serialized_example = reader.read(filename_queue)
 
 	# Decode the record read by the reader
-	features = tf.parse_single_example(serialized_example, features=feature)
+	features = tf.io.parse_single_example(serialized=serialized_example, features=feature)
 
 	# Convert the image data from string back to the numbers
-	image = tf.decode_raw(features['image'], tf.uint8)
-	label = tf.decode_raw(features['label'], tf.uint8)
+	image = tf.io.decode_raw(features['image'], tf.uint8)
+	label = tf.io.decode_raw(features['label'], tf.uint8)
 
 	# Cast data
 	image = tf.cast(image, dtype=tf.float32)
@@ -232,7 +232,7 @@ def read_seg_record(data_path, batch_size=1, size=512):
 	label_one_hot = tf.one_hot(label, 11, axis=-1)
 
 	# Creates batches by randomly shuffling tensors
-	images, labels = tf.train.shuffle_batch([image, label_one_hot], 
+	images, labels = tf.compat.v1.train.shuffle_batch([image, label_one_hot], 
 						batch_size=batch_size, capacity=batch_size*128, num_threads=1, min_after_dequeue=batch_size*32)	
 
 	# images, walls = tf.train.shuffle_batch([image, wall], 
@@ -287,7 +287,7 @@ def load_bd_rm_images(path):
 	return image, cw_ind, room_ind, d_ind
 
 def write_bd_rm_record(paths, name='dataset.tfrecords'):
-	writer = tf.python_io.TFRecordWriter(name)
+	writer = tf.io.TFRecordWriter(name)
 	
 	for i in range(len(paths)):
 		# Load the image
@@ -308,26 +308,26 @@ def write_bd_rm_record(paths, name='dataset.tfrecords'):
 	writer.close()
 
 def read_bd_rm_record(data_path, batch_size=1, size=512):
-	feature = {'image': tf.FixedLenFeature(shape=(), dtype=tf.string),
-				'boundary': tf.FixedLenFeature(shape=(), dtype=tf.string),
-				'room': tf.FixedLenFeature(shape=(), dtype=tf.string),
-				'door': tf.FixedLenFeature(shape=(), dtype=tf.string)}
+	feature = {'image': tf.io.FixedLenFeature(shape=(), dtype=tf.string),
+				'boundary': tf.io.FixedLenFeature(shape=(), dtype=tf.string),
+				'room': tf.io.FixedLenFeature(shape=(), dtype=tf.string),
+				'door': tf.io.FixedLenFeature(shape=(), dtype=tf.string)}
 
 	# Create a list of filenames and pass it to a queue
-	filename_queue = tf.train.string_input_producer([data_path], num_epochs=None, shuffle=False, capacity=batch_size*128)
+	filename_queue = tf.compat.v1.train.string_input_producer([data_path], num_epochs=None, shuffle=False, capacity=batch_size*128)
 	
 	# Define a reader and read the next record
-	reader = tf.TFRecordReader()
+	reader = tf.compat.v1.TFRecordReader()
 	_, serialized_example = reader.read(filename_queue)
 
 	# Decode the record read by the reader
-	features = tf.parse_single_example(serialized_example, features=feature)
+	features = tf.io.parse_single_example(serialized=serialized_example, features=feature)
 
 	# Convert the image data from string back to the numbers
-	image = tf.decode_raw(features['image'], tf.uint8)
-	boundary = tf.decode_raw(features['boundary'], tf.uint8)
-	room = tf.decode_raw(features['room'], tf.uint8)
-	door = tf.decode_raw(features['door'], tf.uint8)
+	image = tf.io.decode_raw(features['image'], tf.uint8)
+	boundary = tf.io.decode_raw(features['boundary'], tf.uint8)
+	room = tf.io.decode_raw(features['room'], tf.uint8)
+	door = tf.io.decode_raw(features['door'], tf.uint8)
 
 	# Cast data
 	image = tf.cast(image, dtype=tf.float32)
@@ -347,7 +347,7 @@ def read_bd_rm_record(data_path, batch_size=1, size=512):
 	label_room = tf.one_hot(room, 9, axis=-1)
 
 	# Creates batches by randomly shuffling tensors
-	images, label_boundaries, label_rooms, label_doors = tf.train.shuffle_batch([image, label_boundary, label_room, door], 
+	images, label_boundaries, label_rooms, label_doors = tf.compat.v1.train.shuffle_batch([image, label_boundary, label_room, door], 
 						batch_size=batch_size, capacity=batch_size*128, num_threads=1, min_after_dequeue=batch_size*32)	
 
 	# images, walls = tf.train.shuffle_batch([image, wall], 

@@ -46,18 +46,18 @@ def main(args):
 	im = imresize(im, (512,512,3)) / 255.
 
 	# create tensorflow session
-	with tf.Session() as sess:
+	with tf.compat.v1.Session() as sess:
 		
 		# initialize
-		sess.run(tf.group(tf.global_variables_initializer(),
-					tf.local_variables_initializer()))
+		sess.run(tf.group(tf.compat.v1.global_variables_initializer(),
+					tf.compat.v1.local_variables_initializer()))
 
 		# restore pretrained model
-		saver = tf.train.import_meta_graph('./pretrained/pretrained_r3d.meta')
+		saver = tf.compat.v1.train.import_meta_graph('./pretrained/pretrained_r3d.meta')
 		saver.restore(sess, './pretrained/pretrained_r3d')
 
 		# get default graph
-		graph = tf.get_default_graph()
+		graph = tf.compat.v1.get_default_graph()
 
 		# restore inputs & outpus tensor
 		x = graph.get_tensor_by_name('inputs:0')
